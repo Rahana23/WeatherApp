@@ -1,22 +1,23 @@
 import { Droplets, Wind, Eye, Gauge, Sunrise, Sunset } from 'lucide-react'
-import type { CurrentWeatherResponse } from '../types/weather'
+import type { CurrentWeatherResponse, CityInfo } from '../types/weather'
 import {
   formatTemp,
-  kelvinToCelsius,
-  metresToKmh,
+  roundTemp,
   degreesToCompass,
-  unixToTime,
+  formatTime,
   formatLastUpdated,
   getWeatherEmoji,
+  getDescriptionFromCode,
 } from '../utils/weatherHelpers'
 import WeatherDetail from './WeatherDetail'
 
 interface WeatherCardProps {
   data: CurrentWeatherResponse
+  city: CityInfo
 }
 
-const WeatherCard = ({ data }: WeatherCardProps) => {
-  const condition = data.weather[0]
+const WeatherCard = ({ data, city }: WeatherCardProps) => {
+  const c = data.current
 
   return (
     <div className="w-full max-w-2xl mx-auto">
@@ -24,32 +25,36 @@ const WeatherCard = ({ data }: WeatherCardProps) => {
       {/* City & Country */}
       <div className="text-center mb-6">
         <h1 className="text-5xl font-bold text-white tracking-tight">
-          {data.name}
+          {city.name}
           <span className="text-2xl font-normal text-white/60 ml-3">
-            {data.sys.country}
+            {city.country}
           </span>
         </h1>
         <p className="text-white/60 text-sm mt-1">
-          {formatLastUpdated(data.dt)}
+          {formatLastUpdated(c.time)}
         </p>
       </div>
 
       {/* Main Temperature */}
       <div className="text-center mb-8">
-        <div className="text-6xl mb-2">{getWeatherEmoji(condition.main)}</div>
-        <div className="text-8xl font-thin text-white mb-2">
-          {formatTemp(data.main.temp)}
+        <div className="text-6xl mb-2">
+          {getWeatherEmoji(c.weather_code.toString())}
         </div>
-        <p className="text-white/80 text-xl capitalize">{condition.description}</p>
+        <div className="text-8xl font-thin text-white mb-2">
+          {formatTemp(c.temperature_2m)}
+        </div>
+        <p className="text-white/80 text-xl capitalize">
+          {getDescriptionFromCode(c.weather_code)}
+        </p>
         <p className="text-white/60 text-sm mt-1">
-          Feels like {formatTemp(data.main.feels_like)}
+          Feels like {formatTemp(c.apparent_temperature)}
         </p>
         <div className="flex justify-center gap-4 mt-3">
           <span className="text-white/70 text-sm">
-            ↑ {kelvinToCelsius(data.main.temp_max)}°
+            ↑ {roundTemp(data.daily.temperature_2m_max[0])}°
           </span>
           <span className="text-white/70 text-sm">
-            ↓ {kelvinToCelsius(data.main.temp_min)}°
+            ↓ {roundTemp(data.daily.temperature_2m_min[0])}°
           </span>
         </div>
       </div>
@@ -59,22 +64,22 @@ const WeatherCard = ({ data }: WeatherCardProps) => {
         <WeatherDetail
           icon={<Droplets size={20} />}
           label="Humidity"
-          value={`${data.main.humidity}%`}
+          value={`${c.relative_humidity_2m}%`}
         />
         <WeatherDetail
           icon={<Wind size={20} />}
           label="Wind"
-          value={`${metresToKmh(data.wind.speed)} km/h ${degreesToCompass(data.wind.deg)}`}
+          value={`${Math.round(c.wind_speed_10m)} km/h ${degreesToCompass(c.wind_direction_10m)}`}
         />
         <WeatherDetail
           icon={<Eye size={20} />}
           label="Visibility"
-          value={`${(data.visibility / 1000).toFixed(1)} km`}
+          value={`${(c.visibility / 1000).toFixed(1)} km`}
         />
         <WeatherDetail
           icon={<Gauge size={20} />}
           label="Pressure"
-          value={`${data.main.pressure} hPa`}
+          value={`${Math.round(c.surface_pressure)} hPa`}
         />
       </div>
 
@@ -84,7 +89,7 @@ const WeatherCard = ({ data }: WeatherCardProps) => {
           <Sunrise size={20} className="text-amber-300" />
           <div>
             <p className="text-xs text-white/50">Sunrise</p>
-            <p className="font-semibold">{unixToTime(data.sys.sunrise)}</p>
+            <p className="font-semibold">{formatTime(data.daily.sunrise[0])}</p>
           </div>
         </div>
         <div className="w-px bg-white/20" />
@@ -92,7 +97,7 @@ const WeatherCard = ({ data }: WeatherCardProps) => {
           <Sunset size={20} className="text-orange-300" />
           <div>
             <p className="text-xs text-white/50">Sunset</p>
-            <p className="font-semibold">{unixToTime(data.sys.sunset)}</p>
+            <p className="font-semibold">{formatTime(data.daily.sunset[0])}</p>
           </div>
         </div>
       </div>

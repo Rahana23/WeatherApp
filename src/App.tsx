@@ -1,5 +1,5 @@
 import { useWeather } from './hooks/useWeather'
-import { getWeatherBackground } from './utils/weatherHelpers'
+import { getWeatherBackground, getConditionFromCode } from './utils/weatherHelpers'
 import SearchBar from './components/SearchBar'
 import WeatherCard from './components/WeatherCard'
 import ForecastCard from './components/ForecastCard'
@@ -8,11 +8,12 @@ import LoadingSpinner from './components/LoadingSpinner'
 function App() {
   console.log('API KEY:', import.meta.env.VITE_OPENWEATHER_API_KEY)
 
-  const { current, forecast, loading, error, fetchWeather } = useWeather()
+  const { current, forecast, city, loading, error, fetchWeather } = useWeather()
 
   const bgGradient = current
-    ? getWeatherBackground(current.weather[0].main)
+    ? getWeatherBackground(getConditionFromCode(current.current.weather_code))
     : 'from-sky-500 via-blue-600 to-indigo-700'
+
 
   return (
     <div
@@ -69,7 +70,8 @@ function App() {
         {/* State 4: Data ready */}
         {!loading && !error && current && (
           <>
-            <WeatherCard data={current} />
+            <WeatherCard data={current} city={city!} />
+
             <ForecastCard forecast={forecast} />
           </>
         )}

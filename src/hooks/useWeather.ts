@@ -1,71 +1,90 @@
 import { useState, useCallback } from "react";
 import type {
+  GeocodingResponse,
   CurrentWeatherResponse,
   ForecastResponse,
   WeatherState,
 } from "../types/weather";
 import { processForecast } from "../utils/weatherHelpers";
 
-const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
-const BASE_URL = "https://api.openweathermap.org/data/2.5";
+const GEO_URL = "https://geocoding-api.open-meteo.com/v1/search";
+const WEATHER_URL = "https://api.open-meteo.com/v1/forecast";
 
 export const useWeather = () => {
-  // ── 1. State ────────────────────────────────────────────────────────────────
   const [state, setState] = useState<WeatherState>({
     current: null,
     forecast: [],
+    city: null,
     loading: false,
     error: null,
-    city: "",
   });
 
-  // ── 2. Fetch Function ───────────────────────────────────────────────────────
-  const fetchWeather = useCallback(async (city: string) => {
-    // Guard: don't fetch if input is blank
-    if (!city.trim()) return;
+  const fetchWeather = useCallback(async (cityName: string) => {
+    if (!cityName.trim()) return;
 
-    // Step A: set loading, clear previous error
+    // Step A: set loading
     setState((prev) => ({
       ...prev,
       loading: true,
       error: null,
-      city,
     }));
 
     try {
-      // Step B: fetch current weather AND forecast at the same time
-      const [currentRes, forecastRes] = await Promise.all([
-        fetch(
-          `${BASE_URL}/weather?q=${encodeURIComponent(city)}&appid=${API_KEY}`,
-        ),
-        fetch(
-          `${BASE_URL}/forecast?q=${encodeURIComponent(city)}&appid=${API_KEY}`,
-        ),
-      ]);
+      // Step B: convert city name → coordinates
+      const geoRes = await fetch(
+        `${GEO_URL}?name=${encodeURIComponent(cityName)}&count=1&language=en&format=json`,
+      );
+      const geoData: GeocodingResponse = await geoRes.json();
 
-      // Step C: check for HTTP errors (e.g. 404 city not found)
-      if (!currentRes.ok) {
-        const errorData = await currentRes.json();
-        throw new Error(errorData.message ?? "City not found");
+      if (!geoData.results || geoData.results.length === 0) {
+        throw new Error(`City "${cityName}" not found`);
       }
 
-      // Step D: parse JSON from both responses
+      const { name, country, latitude, longitude } = geoData.results[0];
+
+      // Step C: fetch current weather + forecast in parallel
+      const params = new URLSearchParams({
+        latitude: String(latitude),
+        longitude: String(longitude),
+        current: [
+          "temperature_2m",
+          "apparent_temperature",
+          "relative_humidity_2m",
+          "wind_speed_10m",
+          "wind_direction_10m",
+          "weather_code",
+          "surface_pressure",
+          "visibility",
+          "is_day",
+        ].join(","),
+        daily: [
+          "temperature_2m_max",
+          "temperature_2m_min",
+          "weather_code",
+          "sunrise",
+          "sunset",
+        ].join(","),
+        timezone: "auto",
+        forecast_days: "6",
+      });
+
+      const [currentRes, forecastRes] = await Promise.all([
+        fetch(`${WEATHER_URL}?${params}`),
+        fetch(`${WEATHER_URL}?${params}`),
+      ]);
+
       const currentData: CurrentWeatherResponse = await currentRes.json();
       const forecastData: ForecastResponse = await forecastRes.json();
+      const processedForecast = processForecast(forecastData);
 
-      // Step E: process raw forecast into our clean format
-      const processedForecast = processForecast(forecastData.list);
-
-      // Step F: save everything to state
       setState({
         current: currentData,
         forecast: processedForecast,
+        city: { name, country, lat: latitude, lon: longitude },
         loading: false,
         error: null,
-        city,
       });
     } catch (err) {
-      // Step G: handle any failure gracefully
       setState((prev) => ({
         ...prev,
         loading: false,

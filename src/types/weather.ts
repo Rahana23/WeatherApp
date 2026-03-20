@@ -1,57 +1,58 @@
-// ─── Raw API Response Types ───────────────────────────────────────────────────
+// ─── Geocoding ────────────────────────────────────────────────────────────────
 
-export interface WeatherCondition {
+export interface GeocodingResult {
   id: number;
-  main: string;
-  description: string;
-  icon: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  country: string;
+  country_code: string;
+  admin1?: string; // region/state — optional
 }
 
-export interface MainWeatherData {
-  temp: number;
-  feels_like: number;
-  temp_min: number;
-  temp_max: number;
-  pressure: number;
-  humidity: number;
+export interface GeocodingResponse {
+  results?: GeocodingResult[];
 }
 
-export interface WindData {
-  speed: number;
-  deg: number;
-  gust?: number;
+// ─── Current Weather ──────────────────────────────────────────────────────────
+
+export interface CurrentWeather {
+  time: string;
+  temperature_2m: number; // °C
+  apparent_temperature: number; // feels like °C
+  relative_humidity_2m: number; // %
+  wind_speed_10m: number; // km/h
+  wind_direction_10m: number; // degrees
+  weather_code: number; // WMO weather code
+  surface_pressure: number; // hPa
+  visibility: number; // metres
+  is_day: number; // 1 = day, 0 = night
 }
 
 export interface CurrentWeatherResponse {
-  name: string;
-  dt: number;
-  weather: WeatherCondition[];
-  main: MainWeatherData;
-  wind: WindData;
-  sys: {
-    country: string;
-    sunrise: number;
-    sunset: number;
+  current: CurrentWeather;
+  daily: {
+    sunrise: string[];
+    sunset: string[];
+    temperature_2m_max: number[];
+    temperature_2m_min: number[];
   };
-  visibility: number;
-  cod: number;
 }
 
-// ─── Forecast Types ───────────────────────────────────────────────────────────
+// ─── Forecast ─────────────────────────────────────────────────────────────────
 
-export interface ForecastItem {
-  dt: number;
-  main: MainWeatherData;
-  weather: WeatherCondition[];
-  wind: WindData;
-  dt_txt: string;
+export interface HourlyForecast {
+  time: string[];
+  temperature_2m: number[];
+  weather_code: number[];
 }
 
 export interface ForecastResponse {
-  list: ForecastItem[];
-  city: {
-    name: string;
-    country: string;
+  daily: {
+    time: string[];
+    temperature_2m_max: number[];
+    temperature_2m_min: number[];
+    weather_code: number[];
   };
 }
 
@@ -65,10 +66,17 @@ export interface ProcessedForecastDay {
   icon: string;
 }
 
+export interface CityInfo {
+  name: string;
+  country: string;
+  lat: number;
+  lon: number;
+}
+
 export interface WeatherState {
   current: CurrentWeatherResponse | null;
   forecast: ProcessedForecastDay[];
+  city: CityInfo | null;
   loading: boolean;
   error: string | null;
-  city: string;
 }
