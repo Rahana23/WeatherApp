@@ -11,6 +11,12 @@ dynamically changes based on current conditions.
 
 ---
 
+## 📸 Screenshots
+
+![WeatherApp - Accra, Ghana](./screenshot.png)
+
+---
+
 ## ✨ Features
 
 - 🌍 **Search any city** worldwide by name
@@ -21,22 +27,22 @@ dynamically changes based on current conditions.
 - 🎨 **Dynamic backgrounds** that change with the weather condition
 - ⚡ **Parallel API calls** via Promise.all for fast load times
 - 💅 **Glassmorphism UI** with smooth 1s background transitions
-- ⚠️ **Full error handling** — invalid cities, network failures, bad keys
-- 🔒 **Secure** — API key stored in .env, never committed to Git
+- ⚠️ **Full error handling** — invalid cities and network failures
+- 🔑 **No API key required** — powered by Open-Meteo (free forever)
 
 ---
 
 ## 🖥️ Tech Stack
 
-| Layer     | Technology         |
-| --------- | ------------------ |
-| Framework | React 18           |
-| Language  | TypeScript 5       |
-| Bundler   | Vite 8             |
-| Styling   | Tailwind CSS v4    |
-| Icons     | Lucide React       |
-| Data      | OpenWeatherMap API |
-| HTTP      | Native Fetch API   |
+| Layer     | Technology       |
+| --------- | ---------------- |
+| Framework | React 18         |
+| Language  | TypeScript 5     |
+| Bundler   | Vite 8           |
+| Styling   | Tailwind CSS v4  |
+| Icons     | Lucide React     |
+| Data      | Open-Meteo API   |
+| HTTP      | Native Fetch API |
 
 ---
 
@@ -56,10 +62,9 @@ weather-app/
 │   ├── types/
 │   │   └── weather.ts          # TypeScript interfaces for API responses
 │   ├── utils/
-│   │   └── weatherHelpers.ts   # Pure functions — temp, wind, date conversions
+│   │   └── weatherHelpers.ts   # Pure functions — conversions and helpers
 │   ├── App.tsx                 # Root component — wires everything together
 │   └── index.css               # Tailwind import
-├── .env.example                # Environment variable template
 └── vite.config.ts              # Vite + Tailwind configuration
 ```
 
@@ -70,7 +75,7 @@ weather-app/
 ### Prerequisites
 
 - Node.js 18+
-- A free [OpenWeatherMap API key](https://openweathermap.org/api)
+- No API key needed — Open-Meteo is completely free
 
 ### Installation
 
@@ -87,36 +92,14 @@ weather-app/
    npm install
 ```
 
-3. **Set up environment variables**
-
-```bash
-   cp .env.example .env
-```
-
-Then open `.env` and replace `your_api_key_here` with your real OpenWeatherMap key:
-
-```
-   VITE_OPENWEATHER_API_KEY=your_actual_key
-```
-
-4. **Start the development server**
+3. **Start the development server**
 
 ```bash
    npm run dev
 ```
 
-5. **Open your browser**
+4. **Open your browser**
    Navigate to [http://localhost:5173](http://localhost:5173)
-
----
-
-## 🔑 Environment Variables
-
-| Variable                   | Description                               | Required |
-| -------------------------- | ----------------------------------------- | -------- |
-| `VITE_OPENWEATHER_API_KEY` | Your free API key from openweathermap.org | ✅ Yes   |
-
-> ⚠️ Never commit your real `.env` file to GitHub. It is listed in `.gitignore` by default.
 
 ---
 
@@ -126,26 +109,16 @@ Then open `.env` and replace `your_api_key_here` with your real OpenWeatherMap k
 
 **Types first** — all TypeScript interfaces are defined in `src/types/weather.ts` before any components are written, giving full autocomplete and type safety throughout.
 
-**Pure utility functions** — all data transformations (Kelvin → Celsius, m/s → km/h, Unix → readable time) live in `src/utils/weatherHelpers.ts` — easy to test and reuse.
+**Pure utility functions** — all data transformations (WMO codes → conditions, formatting, compass directions) live in `src/utils/weatherHelpers.ts` — easy to test and reuse.
 
 **Four UI states** — every screen state is handled explicitly: loading, error, empty, and data. No blank screens or stale data.
 
----
-
-## 📸 Screenshots
-
-_Coming soon — API key activating_
+**Two-step geocoding** — city name is first converted to coordinates via Open-Meteo's geocoding API, then weather is fetched using lat/lon. This gives accurate results for any city worldwide.
 
 ---
 
 ## 👤 Author
 
-**Saeed** — Staff Nurse turned Software Engineer
+**Rahana** — learning to build with React & TypeScript
 
 - GitHub: [@Rahana23](https://github.com/Rahana23)
-
----
-
-## 📄 Licence
-
-MIT
